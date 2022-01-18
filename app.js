@@ -10,7 +10,12 @@ const cookieParser = require('cookie-parser');
 // middle wares
 var cors = require('cors');
 const app = express();
+
+
+// My Routes : 
 const authRoutes = require("./routes/auth")
+const userRoutes = require("./routes/user")
+
 
 
 // DB connection
@@ -24,12 +29,15 @@ mongoose.connect(process.env.DATABASE,
         
 //port
 const port = process.env.PORT
+// Middle wares : 
+
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(cors())
 
 // routes
 app.use("/api",authRoutes);
+app.use("/api",userRoutes);
 
 app.listen(port, () => {
     console.log(`app is running at ${port}`)
