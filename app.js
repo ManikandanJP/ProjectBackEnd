@@ -15,6 +15,7 @@ const app = express();
 // My Routes : 
 const authRoutes = require("./routes/auth")
 const userRoutes = require("./routes/user")
+const categoryRoutes = require("./routes/category")
 
 
 
@@ -38,6 +39,8 @@ app.use(cors())
 // routes
 app.use("/api",authRoutes);
 app.use("/api",userRoutes);
+app.use("/api",categoryRoutes);
+
 
 app.listen(port, () => {
     console.log(`app is running at ${port}`)
