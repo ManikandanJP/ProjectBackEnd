@@ -3,6 +3,7 @@ const formidable = require("formidable");
 const _ = require("lodash");
 const fs = require("fs");
 const product = require("../models/product");
+const { sortBy } = require("lodash");
 exports.getProductById = (res, req, next, id) => {
   Product.find(id)
     .populate("category")
@@ -83,14 +84,14 @@ exports.createProduct = (req, res) => {
     }
 
     //TODO: restrictions on field
-     //destructure the fields
-     const { name, description, price, category, stock } = fields;
+    //destructure the fields
+    const { name, description, price, category, stock } = fields;
 
-     if (!name || !description || !price || !category || !stock) {
-       return res.status(400).json({
-         error: "Please include all fields"
-       });
-     }
+    if (!name || !description || !price || !category || !stock) {
+      return res.status(400).json({
+        error: "Please include all fields",
+      });
+    }
     let product = new Product(fields);
 
     //handle file here
@@ -121,82 +122,81 @@ exports.getProduct = (req, res) => {
   return res.json(req.product);
 };
 
-// delete controller 
-exports.deleteProduct = (res,req) => {
-   let Product = req.product;
-   product.remove((err, deletedProduct) => {
-       if ( err ) {
-           return res.status(400).json({
-               error : "Failed to Delete the product"
-           })           
-       }
-       res.json({
-           message : "Deletion was sucess",
-           deletedProduct
-       })
-   })
+// delete controller
+exports.deleteProduct = (res, req) => {
+  let Product = req.product;
+  product.remove((err, deletedProduct) => {
+    if (err) {
+      return res.status(400).json({
+        error: "Failed to Delete the product",
+      });
+    }
+    res.json({
+      message: "Deletion was sucess",
+      deletedProduct,
+    });
+  });
+};
 
-}
-   
-// update Controller 
+// update Controller
 exports.updateProduct = (res, req) => {
+  let form = new formidable.IncomingForm();
+  form.keepExtensions = true;
 
-    let form = new formidable.IncomingForm();
-    form.keepExtensions = true;
-  
-    form.parse(req, (err, fields, file) => {
-      if (err) {
+  form.parse(req, (err, fields, file) => {
+    if (err) {
+      return res.status(400).json({
+        error: "problem with image",
+      });
+    }
+
+    // Updation code
+
+    let product = req.product;
+    product = _.extend(product, fields);
+    //handle file here
+
+    if (file.photo) {
+      if (file.photo.size > 3000000) {
         return res.status(400).json({
-          error: "problem with image",
+          error: "File size too big!",
         });
       }
-  
-      // Updation code 
+      product.photo.data = fs.readFileSync(file.photo.path);
+      product.photo.contentType = file.photo.type;
+    }
 
-      let product = req.product;
-      product = _.extend(product , fields);
-      //handle file here
-      
-      if (file.photo) {
-        if (file.photo.size > 3000000) {
-          return res.status(400).json({
-            error: "File size too big!",
-          });
-        }
-        product.photo.data = fs.readFileSync(file.photo.path);
-        product.photo.contentType = file.photo.type;
+    //save to the DB
+    product.save((err, product) => {
+      if (err) {
+        res.status(400).json({
+          error: "Updatation of tshirt in DB failed",
+        });
       }
-  
-      //save to the DB
-      product.save((err, product) => {
-        if (err) {
-          res.status(400).json({
-            error: "Updatation of tshirt in DB failed",
-          });
-        }
-        res.json(product);
-      });
-    });   
- 
-}
+      res.json(product);
+    });
+  });
+};
 
 // retrieve all products:
 
-exports.getAllProducts = (req, res) =>{
-    let limit = req.query.limit ?  parseInt(req.query.limit) : 8;
-    Product.find()
-    .sort([[]])
-    .select("-photo")
+exports.getAllProducts = (req, res) => {
+  let limit = req.query.limit ? parseInt(req.query.limit) : 8;
+  let sortBy = req.query.sortBy ? req.query.sortBy : "_id";
+  Product.find()
+    .populate("category")
+    .sort([[sortBy, "asc"]])
+    .select("-photo") /*  negatie sign to ignore photo*/
     .limit(limit)
-    .exec((err , products) => {
-        if( err || !products) {
-            return res.status(400).json({
-                error  : "No Products found"
-            })
-        }
-        res.json(products);
-    })
-}
+    .exec((err, products) => {
+      if (err || !products) {
+        return res.status(400).json({
+          error: "No Products found",
+        });
+      }
+      res.json(products);
+    });
+};
 // middleware
 
 exports.photo = (res, req, next) => {
@@ -206,3 +206,11 @@ exports.photo = (res, req, next) => {
   }
   next();
 };
+
+exports.updateStock = ( req, res, next) => {
+    let myOperations = req.body.Order.products.map(prodcuts => {
+        return 
+    })
+
+    Product.bulkwrite();
+}
