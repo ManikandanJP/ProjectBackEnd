@@ -113,6 +113,15 @@ exports.getProduct = (req, res) => {
   return res.json(req.product);
 };
 
+exports.deleteProduct = (res,req) => {
+
+
+}
+      
+
+exports.updateProduct = (res, req) => {
+ 
+}
 // middleware
 
 exports.photo = (res, req, next) => {
