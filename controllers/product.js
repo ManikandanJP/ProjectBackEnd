@@ -208,9 +208,21 @@ exports.photo = (res, req, next) => {
 };
 
 exports.updateStock = ( req, res, next) => {
-    let myOperations = req.body.Order.products.map(prodcuts => {
-        return 
+    let myOperations = req.body.Order.products.map(prod => {
+        return {
+          updateOne : {
+            filter : {_id : prod.id },
+            update : { $inc : {stock : -prod.count , sold : +prod.count}}
+          }
+        }
     })
 
-    Product.bulkwrite();
+    Product.bulkwrite(myOperations, {} , (err , products) => {
+      if(err) {
+        return res.status(400).json({
+          error : "Bulk operation failed"
+        })
+      }
+      next();
+    });
 }
