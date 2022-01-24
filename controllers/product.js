@@ -197,6 +197,19 @@ exports.getAllProducts = (req, res) => {
       res.json(products);
     });
 };
+
+// list Categories :
+
+exports.getAllUniqueCategories = (req, res) => {
+  Product.distinct("category", {}, (err, category) => {
+    if (err) {
+      res.status(400).json({
+        error: "Categories not Found in db",
+      });
+    }
+    res.json(category);
+  });
+};
 // middleware
 
 exports.photo = (res, req, next) => {
@@ -207,22 +220,22 @@ exports.photo = (res, req, next) => {
   next();
 };
 
-exports.updateStock = ( req, res, next) => {
-    let myOperations = req.body.Order.products.map(prod => {
-        return {
-          updateOne : {
-            filter : {_id : prod.id },
-            update : { $inc : {stock : -prod.count , sold : +prod.count}}
-          }
-        }
-    })
+exports.updateStock = (req, res, next) => {
+  let myOperations = req.body.Order.products.map((prod) => {
+    return {
+      updateOne: {
+        filter: { _id: prod.id },
+        update: { $inc: { stock: -prod.count, sold: +prod.count } },
+      },
+    };
+  });
 
-    Product.bulkwrite(myOperations, {} , (err , products) => {
-      if(err) {
-        return res.status(400).json({
-          error : "Bulk operation failed"
-        })
-      }
-      next();
-    });
-}
+  Product.bulkwrite(myOperations, {}, (err, products) => {
+    if (err) {
+      return res.status(400).json({
+        error: "Bulk operation failed",
+      });
+    }
+    next();
+  });
+};
